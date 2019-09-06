@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # my CNN model
-# takes a 224x224 image size
+# takes a 3x224x224 image size
 
 
 class Net(nn.Module):
