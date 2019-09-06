@@ -6,6 +6,7 @@ from torch.utils.data import random_split
 import torchvision
 import functions as func
 
+
 path = '../data/person_detection/'
 path_my_idx = 'label_idx.csv'
 loc = 'Index of Classes'
