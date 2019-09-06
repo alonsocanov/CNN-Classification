@@ -1,5 +1,6 @@
 # CNN-Classification
-CNN classification and fine-tuning
+Creation or fine -tuninfg a CNN classifier
 
-Simple test for a model creation on CNN-classification and finetuning a model
+Simple test for a CNN model creation and a test for finetuning a model
+
 
