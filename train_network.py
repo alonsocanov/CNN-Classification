@@ -6,6 +6,9 @@ import torchvision
 import variables as var
 import my_model as m
 
+
+save_model = False
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('GPU: ', device)
 
@@ -61,14 +64,15 @@ for epoch in range(var.epochs):  # loop over the data set multiple times
             running_loss = 0.0
 
 print('Finished Training')
-print('Saving model')
+if save_model:
+    print('Saving model')
 
-state = {
-    'model': model,
-    'epoch': var.epochs,
-    'state_dict': model.state_dict(),
-    'optimizer': optimizer.state_dict(),
-    'loss': loss
-}
+    state = {
+        'model': model,
+        'epoch': var.epochs,
+        'state_dict': model.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'loss': loss
+    }
 
-torch.save(state, 'person_detection.pth')
+    torch.save(state, 'person_detection.pth')
