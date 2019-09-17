@@ -29,7 +29,7 @@ print('GPU: ', device)
 argparser = argparse.ArgumentParser()
 argparser.add_argument('--path', type=str, default='../data/person_detection/')
 argparser.add_argument('--labels', default=np.array(['car_side', 'cellphone', 'person']))
-argparser.add_argument('--n_epochs', type=int, default=2)
+argparser.add_argument('--n_epochs', type=int, default=10)
 argparser.add_argument('--batch_size', type=int, default=16)
 argparser.add_argument('--criterion', default=nn.CrossEntropyLoss())
 argparser.add_argument('--momentum', type=float, default=0.9)
@@ -75,7 +75,7 @@ def train(train_load):
         optimizer.step()
         # print statistics
         running_loss += loss.item()
-        if (i+1) % args.batch_size == 0:
+        if (i+1) % (args.batch_size//2) == 0:
             print('Epoch: %d, batch: %5d -> loss: %.8f' % (epoch + 1, i + 1, running_loss / args.batch_size))
             running_loss = 0.0
 
@@ -95,7 +95,6 @@ try:
             'epoch': args.n_epochs,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'loss': loss
         }
         torch.save(state, 'person_detection.pth')
 except KeyboardInterrupt:
@@ -107,7 +106,6 @@ except KeyboardInterrupt:
             'epoch': epoch,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
-            'loss': loss
         }
         torch.save(state, 'person_detection.pth')
 
