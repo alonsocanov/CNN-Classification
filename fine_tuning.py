@@ -111,4 +111,5 @@ except KeyboardInterrupt:
             'loss': loss
         }
         torch.save(state, 'person_detection_ft.pth')
+        
 
