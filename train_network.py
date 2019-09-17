@@ -1,78 +1,114 @@
+from torch.utils.data import DataLoader
+from torch.utils.data import random_split
 import torch
 import torch.optim as optim
-import functions as func
 import numpy as np
-import torchvision
-import variables as var
 import my_model as m
+import argparse
+import torchvision.transforms as transforms
+import torch.nn as nn
+import torchvision
+import functions as func
 
+path_my_idx = 'label_idx.csv'
 
-save_model = False
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+img_resize = 256
+img_crop = 224
+transform = transforms.Compose([
+    transforms.Resize(img_resize),
+    transforms.CenterCrop(img_crop),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=mean, std=std)])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('GPU: ', device)
 
+# Parse command line arguments
+argparser = argparse.ArgumentParser()
+argparser.add_argument('--path', type=str, default='../data/person_detection/')
+argparser.add_argument('--labels', default=np.array(['car_side', 'cellphone', 'person']))
+argparser.add_argument('--n_epochs', type=int, default=2)
+argparser.add_argument('--batch_size', type=int, default=16)
+argparser.add_argument('--criterion', default=nn.CrossEntropyLoss())
+argparser.add_argument('--momentum', type=float, default=0.9)
+argparser.add_argument('--transform', default=transform)
+argparser.add_argument('--print_every', type=int, default=2)
+argparser.add_argument('--learning_rate', type=float, default=0.001)
+argparser.add_argument('--save_model', type=bool, default=False)
 
-path = '../data/person_detection/'
-path_my_idx = 'label_idx.csv'
-loc = 'Index of Classes'
-labels = np.array(['car_side', 'cellphone', 'person'])
-print('Data: ', path)
-print('Labels: ', labels)
+args = argparser.parse_args()
+print(args)
 
-transform = var.transform
-
-data_set = var.data_set
-classes = func.find_classes(path)
+data_set = torchvision.datasets.ImageFolder(root=args.path, transform=args.transform)
+classes = func.find_classes(args.path)
 # print(data_set.targets)
 print(data_set.class_to_idx)
-train_size = len(data_set)//2
+train_size = len(data_set) // 2
 test_size = len(data_set) - train_size
+data_train, data_test = random_split(data_set, [train_size, test_size])
+train_loader = DataLoader(data_train, batch_size=args.batch_size, shuffle=False, sampler=None, num_workers=0)
+test_loader = DataLoader(data_test, batch_size=args.batch_size, shuffle=False, sampler=None, num_workers=0)
+
 print('Train sample: ', train_size)
 print('Test sample: ', test_size)
 
-train_loader = var.train_loader
-test_loader = var.test_loader
-
 img = iter(train_loader)
 images, lab = next(img)
-func.imshow(torchvision.utils.make_grid(images), var.mean, var.std, labels[lab])
+func.imshow(torchvision.utils.make_grid(images), mean, std, args.labels[lab])
 
 model = m.Net()
-optimizer = optim.SGD(model.parameters(), lr=var.lr, momentum=var.momentum)
+optimizer = optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.momentum)
 
-for epoch in range(var.epochs):  # loop over the data set multiple times
-
+def train(train_load):
     running_loss = 0.0
-    for i, data in enumerate(train_loader, 0):
+    for i, data in enumerate(train_load, 0):
         # get the inputs; data is a list of [inputs, labels]
         inputs, lab = data
-
         # zero the parameter gradients
         optimizer.zero_grad()
-
         # forward + backward + optimize
         outputs = model(inputs)
-        loss = var.criterion(outputs, lab)
+        loss = args.criterion(outputs, lab)
         loss.backward()
         optimizer.step()
-
         # print statistics
         running_loss += loss.item()
-        if i-1 % var.batch_size == 0:
-            print('Epoch: %d, batch: %5d -> loss: %.8f' % (epoch + 1, i + 1, running_loss / var.batch_size))
+        if (i+1) % args.batch_size == 0:
+            print('Epoch: %d, batch: %5d -> loss: %.8f' % (epoch + 1, i + 1, running_loss / args.batch_size))
             running_loss = 0.0
 
-print('Finished Training')
-if save_model:
-    print('Saving model')
 
-    state = {
-        'model': model,
-        'epoch': var.epochs,
-        'state_dict': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'loss': loss
-    }
 
-    torch.save(state, 'person_detection.pth')
+
+try:
+    print('Training model')
+    for epoch in range(args.n_epochs):
+        train(train_loader)
+    print('Finished training')
+    if args.save_model:
+        print('Saving model')
+
+        state = {
+            'model': model,
+            'epoch': args.n_epochs,
+            'state_dict': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'loss': loss
+        }
+        torch.save(state, 'person_detection.pth')
+except KeyboardInterrupt:
+    print('\nTraining interrupted')
+    if args.save_model:
+        print('Saving model')
+        state = {
+            'model': model,
+            'epoch': epoch,
+            'state_dict': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'loss': loss
+        }
+        torch.save(state, 'person_detection.pth')
+
+
