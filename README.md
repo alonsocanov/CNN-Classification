@@ -2,10 +2,10 @@
 Creation or fine-tuning a CNN classifier
 
 ## Usage
-'''python
+```python
 train_network.py
-'''
+```
 and 
-'''python
+```python
 my_model.py
-'''
+```
