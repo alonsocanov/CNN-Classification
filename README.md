@@ -19,4 +19,4 @@ To test the accuracy of the models the file
 accuracy_test.py
 ```
 
-Note that the training and testing data will be differennt for each file
+Note that the training and testing data will be different for each file
