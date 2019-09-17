@@ -1,6 +1,11 @@
 # CNN-Classification
-Creation or fine -tuninfg a CNN classifier
+Creation or fine-tuning a CNN classifier
 
-Simple test for a CNN model creation and a test for finetuning a model
-
-
+## Usage
+'''python
+train_network.py
+'''
+and 
+'''python
+my_model.py
+'''
